@@ -66,6 +66,7 @@ int main(int argc,char *argv[])
     if(minet_listen(sock, SOMAXCONN) < 0){
         minet_perror("ERROR listening\n");
     }
+    
     sock2 = minet_accept(sock, (struct sockaddr_in*)&sa2);
     if(sock2 < 0){
         minet_perror("ERROR accepting\n");
@@ -87,6 +88,7 @@ int main(int argc,char *argv[])
 
   }
 
+  minet_close(sock2);
   minet_close(sock);
   minet_deinit();
 }
@@ -141,14 +143,14 @@ int handle_connection(int sock2)
     /* try opening the file */
     ifstream fs(filename);
     fd = stat (filename, &filestat);
-    int filesize = (fd == 0 ? filestat.st_size:-1);
-    ok = (fs.is_open() && filesize > 0);
+    datalen = (fd == 0 ? filestat.st_size:-1);
+    ok = (fs.is_open() && datalen > 0);
     
   /* send response */
   if (ok)
   {
     /* send headers */
-      sprintf(ok_response, ok_response_f, filesize);
+      sprintf(ok_response, ok_response_f, datalen);
 
       minet_write(sock2, ok_response, sizeof (ok_response));
       
@@ -160,7 +162,7 @@ int handle_connection(int sock2)
           file_content += temp+"\n";
       }
       
-      char send_content[filesize];
+      char send_content[datalen];
       strcpy(send_content, file_content.c_str());
       minet_write(sock2, send_content, strlen (send_content));
       fs.close();
